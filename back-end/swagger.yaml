@@ -1,0 +1,166 @@
+openapi: 3.0.0
+info:
+  title: Gestionnaire de File d'Attente API
+  description: API pour la gestion des utilisateurs et des files d'attente
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Serveur local
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    Queue:
+      type: object
+      properties:
+        name:
+          type: string
+        ownerId:
+          type: string
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+              position:
+                type: integer
+    QueueItem:
+      type: object
+      properties:
+        name:
+          type: string
+        priority:
+          type: integer
+
+paths:
+  /auth/register:
+    post:
+      summary: Enregistrer un nouvel utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Utilisateur enregistré avec succès
+        '400':
+          description: Erreur de requête
+
+  /auth/login:
+    post:
+      summary: Connexion de l'utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '400':
+          description: Identifiants invalides
+
+  /api/queue/create:
+    post:
+      summary: Créer une nouvelle liste d'attente
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Liste d'attente créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Queue'
+        '401':
+          description: Authentification requise
+
+  /api/queue/{queueId}/join:
+    post:
+      summary: Rejoindre une liste d'attente
+      parameters:
+        - in: path
+          name: queueId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+      responses:
+        '201':
+          description: Utilisateur ajouté à la liste d'attente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  position:
+                    type: integer
+        '404':
+          description: Liste d'attente non trouvée
+
+  /api/queue/{queueId}/position/{userId}:
+    get:
+      summary: Obtenir la position de l'utilisateur dans la liste d'attente
+      parameters:
+        - in: path
+          name: queueId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Position de l'utilisateur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  position:
+                    type: integer
+        '404':
+          description: Liste d'attente ou utilisateur non trouvé

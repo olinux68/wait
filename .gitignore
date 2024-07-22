@@ -1,0 +1,8 @@
+# Ignorer le répertoire node_modules
+node_modules/
+
+# Ignorer le répertoire build
+build/
+
+# Ignorer les fichiers log
+*.log
